@@ -1,6 +1,6 @@
 # Analytics-Kotlin Optimizely-Full
 
-Optimizely Full integration for [analytics-android](https://github.com/segmentio/analytics-android).
+Add Optimizely Full integration to your applications via this plugin for [Analytics-Kotlin](https://github.com/segmentio/analytics-kotlin).
 
 ## Getting Started
 // TODO
@@ -19,6 +19,7 @@ Please use Github issues, Pull Requests, or feel free to reach out to our [suppo
 
 Interested in integrating your service with us? Check out our [Partners page](https://segment.com/partners/) for more details.
 
+Please see [our documentation](https://segment.com/docs/connections/destinations/catalog/optimizely-full-stack/) for more information.
 
 
 
