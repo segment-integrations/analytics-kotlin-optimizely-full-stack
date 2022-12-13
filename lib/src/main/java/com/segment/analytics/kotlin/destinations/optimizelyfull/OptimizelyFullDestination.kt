@@ -24,7 +24,7 @@ class OptimizelyFullDestination constructor(private val optimizelyManager: Optim
     private var attributes: Map<String, String> = HashMap()
 
     private val OPTIMIZELY_FULL_KEY = "Optimizely X"
-    private val eventExperiment = "Experiment Viewed"
+    private val experimentViewedEvent = "Experiment Viewed"
 
     override val key: String = OPTIMIZELY_FULL_KEY
 
@@ -61,7 +61,7 @@ class OptimizelyFullDestination constructor(private val optimizelyManager: Optim
             id = payload.userId
         }
         optimizelyUser = optimizelyClient?.createUserContext(id, attributes)
-        if(event != eventExperiment) {
+        if(event != experimentViewedEvent) {
             optimizelyUser?.decide(experimentKey)
         }
         optimizelyUser?.trackEvent(event, properties)
@@ -92,7 +92,7 @@ class OptimizelyFullDestination constructor(private val optimizelyManager: Optim
                 }
             }
             analytics.track(
-                "Experiment Viewed",
+                experimentViewedEvent,
                 properties
             )
         }
