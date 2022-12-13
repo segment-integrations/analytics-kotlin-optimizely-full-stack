@@ -1,9 +1,9 @@
 package com.segment.analytics.kotlin.destinations.optimizelyfull
 
 import android.content.Context
+import com.optimizely.ab.OptimizelyUserContext
 import com.optimizely.ab.android.sdk.OptimizelyClient
 import com.optimizely.ab.android.sdk.OptimizelyManager
-import com.optimizely.ab.event.LogEvent
 import com.optimizely.ab.notification.*
 import com.segment.analytics.kotlin.core.*
 import com.segment.analytics.kotlin.core.platform.DestinationPlugin
@@ -11,18 +11,20 @@ import com.segment.analytics.kotlin.core.platform.Plugin
 import com.segment.analytics.kotlin.core.platform.plugins.logger.log
 import com.segment.analytics.kotlin.core.utilities.toContent
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-class OptimizelyFullDestination constructor(private val optimizelyManager: OptimizelyManager) :
+class OptimizelyFullDestination constructor(private val optimizelyManager: OptimizelyManager, private val experimentKey: String = "") :
     DestinationPlugin() {
     private var optimizelyClient: OptimizelyClient? = null
     internal var optimizelyFullSettings: OptimizelyFullSettings? = null
+    private var optimizelyUser:OptimizelyUserContext?=null
+
     private var attributes: Map<String, String> = HashMap()
 
     private val OPTIMIZELY_FULL_KEY = "Optimizely X"
+    private val eventExperiment = "Experiment Viewed"
 
     override val key: String = OPTIMIZELY_FULL_KEY
 
@@ -30,13 +32,6 @@ class OptimizelyFullDestination constructor(private val optimizelyManager: Optim
         super.update(settings, type)
         this.optimizelyFullSettings = settings.destinationSettings(key, OptimizelyFullSettings.serializer())
         if (type == Plugin.UpdateType.Initial) {
-          /*  optimizelyManager.initialize(analytics.configuration.application as Context, null
-            ) { optimizely ->
-                optimizelyClient = optimizely
-                if (optimizelyFullSettings?.listen == true) {
-                    addNotificationListeners()
-                }
-            }*/
             optimizelyClient = optimizelyManager.initialize(analytics.configuration.application as Context, null)
             if (optimizelyFullSettings?.listen == true) {
                addNotificationListeners()
@@ -48,7 +43,6 @@ class OptimizelyFullDestination constructor(private val optimizelyManager: Optim
         attributes = payload.traits.asStringMap()
         return super.identify(payload)
     }
-
     override fun track(payload: TrackEvent): BaseEvent? {
         val userId: String = payload.userId
 
@@ -66,8 +60,10 @@ class OptimizelyFullDestination constructor(private val optimizelyManager: Optim
         if (optimizelyFullSettings?.trackKnownUsers == true && !userId.isEmpty()) {
             id = payload.userId
         }
-
-        val optimizelyUser = optimizelyClient?.createUserContext(id, attributes)
+        optimizelyUser = optimizelyClient?.createUserContext(id, attributes)
+        if(event != eventExperiment) {
+            optimizelyUser?.decide(experimentKey)
+        }
         optimizelyUser?.trackEvent(event, properties)
 
         analytics.log("optimizelyUser?.trackEvent($event, $id, $attributes, $properties)")
@@ -84,11 +80,14 @@ class OptimizelyFullDestination constructor(private val optimizelyManager: Optim
      * Adding Notification Listeners to OptimizelyClient
      */
     private fun addNotificationListeners() {
+
         optimizelyClient?.addDecisionNotificationHandler { notification: DecisionNotification ->
-            val decisionInfo = notification.decisionInfo
             val properties = buildJsonObject {
-                put("variationId", decisionInfo["variationKey"] as JsonElement)
-                if(optimizelyFullSettings?.nonInteraction == true) {
+                put("type", notification.type)
+                put("userId", notification.userId)
+                put("attributes", notification.attributes.toString())
+                put("decisionInfo", notification.decisionInfo.toString())
+                if (optimizelyFullSettings?.nonInteraction == true) {
                     put("nonInteraction", 1)
                 }
             }
@@ -98,11 +97,7 @@ class OptimizelyFullDestination constructor(private val optimizelyManager: Optim
             )
         }
 
-        optimizelyClient?.addTrackNotificationHandler { notification: TrackNotification ->
-        }
-        optimizelyClient?.addLogEventNotificationHandler { notification: LogEvent ->
-        }
-        optimizelyClient?.addUpdateConfigNotificationHandler { notification: UpdateConfigNotification ->
+        optimizelyClient?.addTrackNotificationHandler {
         }
     }
 }
