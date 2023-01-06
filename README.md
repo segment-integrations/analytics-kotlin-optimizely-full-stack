@@ -23,6 +23,13 @@ Open the file where you setup and configure the Analytics-Kotlin library.  Add t
 ```
 import com.segment.analytics.kotlin.destinations.optimizelyfull.OptimizelyFullDestinaton
 ```
+Since the Optimizely Manager should be initialized as soon as possible in your application subclass, we leave it up to you to create this instance. You must then pass it to the Plugin.
+
+```
+   manager = OptimizelyManager.builder()
+      .withSDKKey("<WRITE_YOUR_OPTIMIZELY_SDK-KEY>")
+      .build(applicationContext)
+```
 
 Just under your Analytics-Kotlin library setup, call `analytics.add(plugin = ...)` to add an instance of the plugin to the Analytics timeline.
 
@@ -31,7 +38,7 @@ Just under your Analytics-Kotlin library setup, call `analytics.add(plugin = ...
         this.flushAt = 3
         this.trackApplicationLifecycleEvents = true
     }
-    analytics.add(plugin = OptimizelyFullDestinaton())
+    analytics.add(plugin = OptimizelyFullDestinaton(optimizelyManager = manager))
 ```
 
 Your events will now begin to flow to Optimizely-Full Stack in device mode.
