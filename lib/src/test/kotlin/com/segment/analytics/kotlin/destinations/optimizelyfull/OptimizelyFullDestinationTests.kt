@@ -6,6 +6,7 @@ import com.optimizely.ab.OptimizelyUserContext
 import com.optimizely.ab.android.sdk.OptimizelyClient
 import com.optimizely.ab.android.sdk.OptimizelyManager
 import com.optimizely.ab.notification.NotificationCenter
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision
 import com.segment.analytics.kotlin.core.*
 import com.segment.analytics.kotlin.core.platform.Plugin
 import com.segment.analytics.kotlin.core.utilities.LenientJson
@@ -43,6 +44,9 @@ class OptimizelyFullDestinationTests {
 
     @MockK(relaxUnitFun = true)
     lateinit var mockedOptimizelyUserContext: OptimizelyUserContext
+
+    @MockK(relaxUnitFun = true)
+    lateinit var mockedOptimizelyDecision: OptimizelyDecision
 
     @MockK(relaxUnitFun = true)
     lateinit var mockedNotificationCenter: NotificationCenter
@@ -180,6 +184,11 @@ class OptimizelyFullDestinationTests {
                 any()
             )
         } answers { mockedOptimizelyUserContext }
+
+        every {
+            mockedOptimizelyUserContext.decide(any()
+            )
+        } answers { mockedOptimizelyDecision }
 
         val trackEvent = optimizelyFullDestination.track(sampleTrackEvent)
         Assertions.assertNotNull(trackEvent)
